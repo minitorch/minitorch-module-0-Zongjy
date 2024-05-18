@@ -25,19 +25,21 @@ class Module:
         self.training = True
 
     def modules(self) -> Sequence[Module]:
-        "Return the direct child modules of this module."
+        """Return the direct child modules of this module."""
         m: Dict[str, Module] = self.__dict__["_modules"]
         return list(m.values())
 
     def train(self) -> None:
-        "Set the mode of this module and all descendent modules to `train`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+        """Set the mode of this module and all descendent modules to `train`."""
+        self.training = True
+        for sub_mod in self.modules():
+            sub_mod.train()
 
     def eval(self) -> None:
-        "Set the mode of this module and all descendent modules to `eval`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+        """Set the mode of this module and all descendent modules to `eval`."""
+        self.training = False
+        for sub_mod in self.modules():
+            sub_mod.eval()
 
     def named_parameters(self) -> Sequence[Tuple[str, Parameter]]:
         """
@@ -47,13 +49,16 @@ class Module:
         Returns:
             The name and `Parameter` of each ancestor parameter.
         """
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+        params = [(name, param) for name, param in self._parameters.items()]
+        for sub_mod_name, sub_mod in self._modules.items():
+            sub_mod_params = sub_mod.named_parameters()
+            for sub_name, sub_param in sub_mod_params:
+                params.append((f"{sub_mod_name}.{sub_name}", sub_param))
+        return params
 
     def parameters(self) -> Sequence[Parameter]:
-        "Enumerate over all the parameters of this module and its descendents."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+        """Enumerate over all the parameters of this module and its descendents."""
+        return [param for _, param in self.named_parameters()]
 
     def add_parameter(self, k: str, v: Any) -> Parameter:
         """
@@ -134,7 +139,7 @@ class Parameter:
                 self.value.name = self.name
 
     def update(self, x: Any) -> None:
-        "Update the parameter value."
+        """Update the parameter value."""
         self.value = x
         if hasattr(x, "requires_grad_"):
             self.value.requires_grad_(True)
